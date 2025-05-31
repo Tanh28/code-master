@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const { query, run } = require('../config/database');
+const UserModel = require('../models/userModel');
 
 // Cấu hình multer cho upload ảnh
 const storage = multer.diskStorage({
@@ -50,7 +52,7 @@ router.post('/avatar', upload.single('avatar'), async (req, res) => {
         const avatarUrl = `/uploads/avatars/${req.file.filename}`;
         
         // Cập nhật URL avatar trong database
-        // ... code cập nhật database ...
+        await UserModel.updateAvatar(req.session.user.MaNguoiDung, avatarUrl);
 
         // Cập nhật session
         req.session.user.Avatar = avatarUrl;
