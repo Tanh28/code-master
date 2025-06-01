@@ -39,6 +39,7 @@ router.get('/', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/');
     }
+    console.log('DEBUG session user object:', req.session.user);
     res.render('profile', { user: req.session.user });
 });
 
@@ -49,16 +50,29 @@ router.post('/avatar', upload.single('avatar'), async (req, res) => {
             return res.json({ success: false, message: 'No file uploaded' });
         }
 
+        console.log('DEBUG full session user:', req.session.user);
         const avatarUrl = `/uploads/avatars/${req.file.filename}`;
         
+        // Kiểm tra nếu MaNguoiDung không tồn tại, dùng id thay thế
+        const userId = req.session.user.MaNguoiDung || req.session.user.id;
+        
+        console.log('DEBUG userId being used:', userId);
+        
+        if (!userId) {
+            console.error('No user ID found in session');
+            return res.json({ success: false, message: 'Không thể xác định người dùng' });
+        }
+        
         // Cập nhật URL avatar trong database
-        await UserModel.updateAvatar(req.session.user.MaNguoiDung, avatarUrl);
-
+        const result = await UserModel.updateAvatar(userId, avatarUrl);
+        console.log('DEBUG updateAvatar result:', result);
+        
         // Cập nhật session
         req.session.user.Avatar = avatarUrl;
 
         res.json({ success: true, avatarUrl });
     } catch (error) {
+        console.error('DEBUG avatar upload error:', error);
         res.json({ success: false, message: error.message });
     }
 });
